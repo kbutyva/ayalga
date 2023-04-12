@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MusicTuva</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+    #song-player{
+
+    display: none;
+
+}
+
+#song-form{
+
+    width: 60%;
+
+}
+</style>
+</head>
+
+<body>
+    <header>
+        <h1>Music in Tuva</h1>
+    </header>
+    <main>
+        <div id="song-list">
+            <header>
+                <h3>Your songs</h3>
+            </header>
+            <ul id="your-songs">
+            </ul>
+        </div>
+        <div id="song-player">
+            <header>
+                <h3 id="now-playing"></h3>
+            </header>
+            <audio id="song-screen" controls></audio>
+        </div>
+        <form id="song-form">
+            <fieldset>
+                <legend>Upload a song</legend>
+                <label for="file">Song File</label>
+                <input id="file" name="file" type="file" accept="application/mp3">
+                <label for="name">Song Name</label>
+                <input id="name" name="name" type="text">
+                <button type="submit">Save</button>
+            </fieldset>
+        </form>
+    </main>
+    <script>
+            const myVids = document.querySelector('#your-songs');
+            
+            fetch('http://localhost:8252/song/all')
+                    .then(result => result.json())
+                    .then(result => {
+                
+                        if (result.length > 0) {
+                            for (let vid of result) {
+                                const li = document.createElement('LI');
+                                const link = document.createElement('A');
+                                link.innerText = vid;
+                                link.href = window.location.origin + window.location.pathname + '?song=' + vid;
+                                li.appendChild(link);
+                                myVids.appendChild(li);
+                            }
+                        } else {
+                            myVids.innerHTML = 'Ырылар Чогул';
+                        }
+
+                    });
+
+            const queryParams = Object.fromEntries(new URLSearchParams(window.location.search));
+            const songScreen = document.querySelector('#song-screen');
+            const songDiv = document.querySelector('#song-player');
+            
+            if (queryParams.song) {
+
+                songScreen.src = `http://localhost:8252/song/${queryParams.song}`;
+//                songDiv.style.display = 'block';
+                
+                document.querySelector('#now-playing')
+                        .innerText = 'Ойнап турар ыры ' + queryParams.song;
+
+            }
+
+            const form = document.querySelector('#song-form');
+
+            form.addEventListener('submit', ev => {
+                ev.preventDefault();
+                let data = new FormData(form);
+                fetch('http://localhost:8252/song', {
+                    method: 'POST',
+                    body: data
+                }).then(result => result.text()).then(_ => {
+                    window.location.reload();
+                });
+
+            });
+        </script>
+</body>
+</html>
